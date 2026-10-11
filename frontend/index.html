@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#18312f" />
+    <title>GliomaScan-HC | Research Workbench</title>
+    <link rel="stylesheet" href="style.css?v=weighted-ensemble" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="GliomaScan-HC home">
+        <span class="brand-mark" aria-hidden="true">G</span>
+        <span><strong>GliomaScan-HC</strong><small>RESEARCH WORKBENCH</small></span>
+      </a>
+      <div class="system-state" id="systemState" role="status">
+        <span class="state-dot" aria-hidden="true"></span><span id="systemStateText">Checking model</span>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Workspace sections">
+      <button class="tab active" type="button" data-tab="analysis" aria-selected="true">Analysis</button>
+      <button class="tab" type="button" data-tab="performance" aria-selected="false">Test performance</button>
+      <button class="tab" type="button" data-tab="provenance" aria-selected="false">Provenance</button>
+    </nav>
+
+    <main>
+      <section class="panel active" id="analysis" aria-labelledby="analysisTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">VALIDATION-SELECTED PREDICTOR</p><h1 id="analysisTitle">Brain tumor AI analysis</h1></div>
+          <span class="sequence-tag">Sequence: unspecified</span>
+        </div>
+
+        <div class="analysis-layout">
+          <section class="input-column" aria-labelledby="imageHeading">
+            <div class="section-heading"><h2 id="imageHeading">Input image</h2><span>PNG · JPEG · BMP · TIFF · max 25 MiB</span></div>
+            <label class="drop-zone" for="fileInput" id="dropZone">
+              <span class="upload-symbol" aria-hidden="true">+</span>
+              <strong>Select an MRI image</strong>
+              <span id="fileName">No image selected</span>
+            </label>
+            <input id="fileInput" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/bmp,image/tiff" />
+            <figure class="image-frame input-preview" id="inputPreviewFrame" hidden>
+              <img id="inputPreview" alt="Selected MRI image preview" />
+            </figure>
+            <dl class="input-details" id="inputDetails" hidden>
+              <div><dt>Modality</dt><dd id="inputModality">—</dd></div>
+              <div><dt>Original resolution</dt><dd id="inputResolution">—</dd></div>
+              <div><dt>Common preprocessing</dt><dd id="inputCommonSize">—</dd></div>
+              <div><dt>Model input sizes</dt><dd id="inputModelSizes">—</dd></div>
+              <div><dt>Preprocessing applied</dt><dd id="inputSteps">—</dd></div>
+              <div><dt>Skull/background removal</dt><dd id="inputSkullRemoval">—</dd></div>
+            </dl>
+            <label class="explanation-select" for="explainMode">
+              Explanation method
+              <select id="explainMode">
+                <option value="hybrid_cam" selected>Hybrid CAM · Grad-CAM + Guided Backprop</option>
+                <option value="gradcam">Grad-CAM</option>
+                <option value="none">No explanation</option>
+              </select>
+            </label>
+            <button class="primary-button" id="analyzeBtn" type="button" disabled>Analyze image</button>
+            <p class="microcopy">This research model was trained on images with unspecified MRI sequence.</p>
+          </section>
+
+          <section class="result-column" aria-labelledby="resultHeading">
+            <div class="section-heading"><h2 id="resultHeading">Model output</h2><span id="resultState">Awaiting image</span></div>
+            <div class="empty-state" id="emptyState"><span class="empty-rule"></span><p>Select an image to begin.</p></div>
+            <div class="result-content" id="resultContent" hidden>
+              <div class="classification-line">
+                <div><p class="eyebrow" id="predictorTitle">VALIDATION-SELECTED PREDICTION</p><h3 id="resultLabel">—</h3></div>
+                <div class="probability"><strong id="classConfidence">—</strong><span>top-class confidence</span></div>
+              </div>
+              <div class="decision-card" id="decisionCard">
+                <strong id="decisionTitle">—</strong>
+                <span id="decisionDetail">—</span>
+              </div>
+              <div class="probability-track" aria-label="Predicted class confidence"><span id="probabilityFill"></span></div>
+              <ul class="class-probability-list" id="classProbabilityList" aria-label="Probability by class"></ul>
+              <dl class="result-meta">
+                <div><dt>Selected predictor</dt><dd id="aggregation">—</dd></div>
+                <div><dt>Model agreement</dt><dd id="modelAgreement">—</dd></div>
+                <div><dt>Inference time</dt><dd id="inferenceTime">—</dd></div>
+              </dl>
+              <section class="explanation-block" aria-labelledby="explanationMethod">
+                <div class="section-heading"><h2 id="explanationMethod">Hybrid CAM explanation</h2><span id="explanationState">Not generated</span></div>
+                <p class="microcopy">All panels refer to the same uploaded image and predicted class. Highlighted regions show model influence only; they are not tumor boundaries.</p>
+                <div class="explanation-grid" id="explanationGrid" hidden>
+                  <figure class="explanation-card"><figcaption>Original MRI</figcaption><img id="originalResultImage" alt="Original uploaded MRI" /><a id="downloadOriginal" download="original-mri.png">Download original</a></figure>
+                  <figure class="explanation-card"><figcaption>Grad-CAM · coarse localization</figcaption><img id="gradcamImage" alt="Grad-CAM model attention overlay" /><a id="downloadGradcam" download="grad-cam.png">Download Grad-CAM</a></figure>
+                  <figure class="explanation-card"><figcaption>Guided Backprop · fine detail</figcaption><img id="guidedImage" alt="Guided Backpropagation attribution map" /><a id="downloadGuided" download="guided-backprop.png">Download Guided Backprop</a></figure>
+                  <figure class="explanation-card"><figcaption>Hybrid CAM · fused explanation</figcaption><img id="hybridImage" alt="Hybrid CAM overlay fusing Grad-CAM and Guided Backpropagation" /><a id="downloadHybrid" download="hybrid-cam.png">Download Hybrid CAM</a></figure>
+                </div>
+                <p class="microcopy heat-legend">Importance key: <span class="heat-high">red / yellow = stronger</span> · <span class="heat-medium">green = medium</span> · <span class="heat-low">blue = lower</span></p>
+                <p class="microcopy" id="explanationNote">Explanations are not medical segmentation or diagnosis.</p>
+                <p class="overlap-stat" id="hybridMethod"></p>
+                <p class="overlap-stat" id="attributionOverlap" hidden></p>
+              </section>
+              <section class="prediction-summary" aria-labelledby="predictionSummaryTitle">
+                <div class="section-heading"><h2 id="predictionSummaryTitle">Prediction summary</h2></div>
+                <div class="summary-cards">
+                  <div><span>Accuracy</span><strong id="predictionAccuracy">—</strong></div>
+                  <div><span>Sensitivity / recall</span><strong id="predictionRecall">—</strong></div>
+                  <div><span>Specificity</span><strong id="predictionSpecificity">—</strong></div>
+                  <div><span>Precision</span><strong id="predictionPrecision">—</strong></div>
+                  <div><span>F1 score</span><strong id="predictionF1">—</strong></div>
+                  <div><span>ROC AUC</span><strong id="predictionAuc">—</strong></div>
+                  <div><span>Cohen's kappa</span><strong id="predictionKappa">—</strong></div>
+                </div>
+                <p class="microcopy">Evaluation metrics are held-out test-set estimates; they are not measurements of this individual image.</p>
+              </section>
+              <section class="model-results" aria-labelledby="modelResultsTitle">
+                <div class="section-heading"><h2 id="modelResultsTitle">Model predictions</h2><span id="modelResultsCount">—</span></div>
+                <div class="table-scroll"><table id="modelResultsTable"></table></div>
+              </section>
+              <section class="extra-results" aria-label="Result details">
+                <div><strong>Validation-selected predictor</strong><span id="predictorDetail">—</span></div>
+                <div><strong>Model agreement</strong><span id="agreementDetail">—</span></div>
+                <div><strong>Explainable AI</strong><span>Grad-CAM and Guided Backprop are fused into Hybrid CAM using a normalized pointwise product.</span></div>
+                <div><strong>Research caution</strong><span>Image labels are dataset categories and the highlighted area is not medically confirmed tumor tissue.</span></div>
+              </section>
+              <div class="download-report"><a id="downloadReport" download="brain-tumor-prediction-report.json">Download prediction summary (JSON)</a></div>
+              <ul class="warning-list" id="warningList"></ul>
+            </div>
+          </section>
+        </div>
+        <aside class="safety-note"><strong>Research use only.</strong> Not clinically validated and not for diagnosis or treatment decisions.</aside>
+      </section>
+
+      <section class="panel" id="performance" aria-labelledby="performanceTitle">
+        <div class="page-heading">
+          <div><p class="eyebrow">HELD-OUT EVALUATION</p><h1 id="performanceTitle">Test performance</h1></div>
+          <span class="sequence-tag" id="testCount">Loading report</span>
+        </div>
+        <div id="metricsState" class="empty-state"><span class="empty-rule"></span><p>Loading saved evaluation…</p></div>
+        <div id="metricsContent" hidden>
+          <div class="metric-grid" id="metricGrid"></div>
+          <details class="metric-guide">
+            <summary>What these metrics mean</summary>
+            <p><strong>Accuracy:</strong> fraction of all images classified correctly. <strong>Balanced accuracy:</strong> average sensitivity across classes. <strong>Precision:</strong> when predicted as a class, how often it was correct. <strong>Sensitivity / recall:</strong> how many images of a class were found. <strong>Specificity:</strong> how many images outside that class were correctly rejected. <strong>F1:</strong> balance between precision and sensitivity. <strong>ROC AUC:</strong> how well the class scores rank positives above negatives; it does not measure calibration.</p>
+          </details>
+          <div class="class-metrics" id="classMetrics"></div>
+          <section class="confusion-section" aria-labelledby="confusionTitle">
+            <h2 id="confusionTitle">Confusion matrix</h2>
+            <p>Rows are the actual dataset labels; columns are model predictions. The diagonal shows correct classifications.</p>
+            <div class="table-scroll"><table id="confusionMatrix"></table></div>
+          </section>
+          <section class="confusion-section" aria-labelledby="evaluationFiguresTitle">
+            <h2 id="evaluationFiguresTitle">Evaluation figures</h2>
+            <div class="explanation-grid">
+              <figure class="explanation-card"><figcaption>Confusion matrix</figcaption><img id="confusionFigure" alt="Confusion matrix heatmap" hidden /></figure>
+              <figure class="explanation-card"><figcaption>One-vs-rest ROC curves</figcaption><img id="rocFigure" alt="One-vs-rest receiver operating characteristic curves" hidden /></figure>
+            </div>
+            <p class="microcopy" id="confidenceSummary"></p>
+          </section>
+          <div class="provenance-strip">
+            <div><span>Dataset</span><strong id="metricDataset">—</strong></div>
+              <div><span>Model / ensemble</span><strong id="metricModel">—</strong></div>
+            <div><span>Evaluation split</span><strong id="metricSplit">—</strong></div>
+          </div>
+          <section class="dataset-splits" aria-labelledby="datasetSplitsTitle">
+            <h2 id="datasetSplitsTitle">Dataset split sizes</h2>
+            <div class="table-scroll"><table id="datasetSplitTable"></table></div>
+          </section>
+          <p class="caveat" id="metricCaveat"></p>
+        </div>
+        <aside class="safety-note"><strong>Interpret with care.</strong> These results describe this dataset split only; they are not paper-reproduction or clinical performance.</aside>
+      </section>
+
+      <section class="panel" id="provenance" aria-labelledby="provenanceTitle">
+        <div class="page-heading"><div><p class="eyebrow">DATA &amp; MODEL</p><h1 id="provenanceTitle">Provenance</h1></div></div>
+        <div class="provenance-list">
+          <div><span>Source</span><strong>masoudnickparvar/brain-tumor-mri-dataset</strong></div>
+          <div><span>Dataset license</span><strong id="provenanceLicense">CC BY 4.0</strong></div>
+          <div><span>Task</span><strong>Glioma, meningioma, no tumor, or pituitary dataset class</strong></div>
+          <div><span>Model</span><strong>Validation-selected predictor compared across eight CNN checkpoints</strong></div>
+          <div><span>Interpretability</span><strong>Grad-CAM, Guided Backpropagation, and normalized pointwise-product Hybrid CAM</strong></div>
+        </div>
+        <p class="caveat">The source dataset's glioma class is not specifically confirmed glioblastoma; labels are not clinical diagnoses. The dataset does not specify MRI sequence or provide segmentation masks. Heatmaps show model influence, not clinically verified tumor locations.</p>
+        <aside class="safety-note"><strong>Research and education only.</strong> This software is not a medical device and must not guide care.</aside>
+      </section>
+    </main>
+
+    <script src="app.js?v=weighted-ensemble"></script>
+  </body>
+</html>
